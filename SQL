@@ -1,0 +1,304 @@
+### CREATING THE DATABASE
+
+CREATE DATABASE EMRDatabase;
+GO
+USE EMRDatabase;
+
+### CREATING TABLES
+TABLES CREATED
+
+• Patients
+• Departments
+• Providers
+• Appointments
+• Visits
+• Lab_Orders
+• Lab_Results
+• Medications
+• Prescriptions
+• Vital_Signs
+• Allergies
+• Admissions
+• Billing
+• Insurance
+• Audit_Log
+• Date
+
+Each table includes primary keys and foreign keys to enforce referential integrity.
+Tables scripts in SQL
+
+CREATE TABLE Patients (
+    patient_id INT PRIMARY KEY AUTO_INCREMENT,
+    medical_record_number VARCHAR(50) UNIQUE NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    gender VARCHAR(20),
+    marital_status VARCHAR(50),
+    blood_type VARCHAR(5),
+    phone VARCHAR(20),
+    email VARCHAR(150),
+    address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    zip_code VARCHAR(20),
+    emergency_contact_name VARCHAR(150),
+    emergency_contact_phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE Departments (
+    department_id INT PRIMARY KEY AUTO_INCREMENT,
+    department_name VARCHAR(100) NOT NULL,
+    location VARCHAR(100),
+    phone VARCHAR(20)
+);
+CREATE TABLE Providers (
+    provider_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    specialty VARCHAR(150),
+    department_id INT,
+    phone VARCHAR(20),
+    email VARCHAR(150),
+    license_number VARCHAR(100),
+    FOREIGN KEY (department_id) REFERENCES Departments(department_id)
+);
+CREATE TABLE Billing (
+    bill_id INT PRIMARY KEY AUTO_INCREMENT,
+    patient_id INT,
+    visit_id INT,
+    total_amount DECIMAL(10,2),
+    insurance_coverage DECIMAL(10,2),
+    patient_balance DECIMAL(10,2),
+    billing_date DATETIME,
+    payment_status VARCHAR(50),
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES Visits(visit_id)
+);
+CREATE TABLE Date (
+    date_key INT PRIMARY KEY,
+    full_date DATE,
+    year INT,
+    quarter INT,
+    month INT,
+    day INT
+);
+
+
+CREATE TABLE Appointments (
+    appointment_id INT IDENTITY(1,1) PRIMARY KEY,
+    patient_id INT,
+    provider_id INT,
+    appointment_date DATETIME,
+    reason NVARCHAR(MAX),
+    status VARCHAR(50),
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id),
+    FOREIGN KEY (provider_id) REFERENCES Providers(provider_id)
+);
+
+CREATE TABLE Lab_Orders (
+    lab_order_id INT IDENTITY(1,1) PRIMARY KEY,
+    visit_id INT,
+    ordered_by INT,
+    order_date DATETIME DEFAULT GETDATE(),
+    status VARCHAR(50),
+    FOREIGN KEY (visit_id) REFERENCES Visits(visit_id),
+    FOREIGN KEY (ordered_by) REFERENCES Providers(provider_id)
+);
+CREATE TABLE Lab_Results (
+    lab_result_id INT IDENTITY(1,1) PRIMARY KEY,
+    lab_order_id INT,
+    test_name VARCHAR(150),
+    result_value VARCHAR(100),
+    reference_range VARCHAR(100),
+    result_status VARCHAR(50),
+    result_date DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (lab_order_id) REFERENCES Lab_Orders(lab_order_id)
+);
+CREATE TABLE Medications (
+    medication_id INT IDENTITY(1,1) PRIMARY KEY,
+    medication_name VARCHAR(150),
+    dosage_form VARCHAR(100),
+    strength VARCHAR(50)
+);
+CREATE TABLE Prescriptions (
+    prescription_id INT IDENTITY(1,1) PRIMARY KEY,
+    visit_id INT,
+    medication_id INT,
+    dosage VARCHAR(50),
+    frequency VARCHAR(50),
+    duration VARCHAR(50),
+    instructions NVARCHAR(MAX),
+    FOREIGN KEY (visit_id) REFERENCES Visits(visit_id),
+    FOREIGN KEY (medication_id) REFERENCES Medications(medication_id)
+);
+CREATE TABLE Vital_Signs (
+    vital_id INT IDENTITY(1,1) PRIMARY KEY,
+    visit_id INT,
+    temperature DECIMAL(5,2),
+    blood_pressure VARCHAR(20),
+    heart_rate INT,
+    respiratory_rate INT,
+    oxygen_saturation DECIMAL(5,2),
+    weight DECIMAL(6,2),
+    height DECIMAL(6,2),
+    recorded_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (visit_id) REFERENCES Visits(visit_id)
+);
+CREATE TABLE Allergies (
+    allergy_id INT IDENTITY(1,1) PRIMARY KEY,
+    patient_id INT,
+    allergen VARCHAR(150),
+    reaction NVARCHAR(MAX),
+    severity VARCHAR(50),
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id)
+);
+CREATE TABLE Admissions (
+    admission_id INT IDENTITY(1,1) PRIMARY KEY,
+    patient_id INT,
+    admission_date DATETIME,
+    discharge_date DATETIME,
+    room_number VARCHAR(20),
+    attending_provider INT,
+    admission_reason NVARCHAR(MAX),
+    discharge_summary NVARCHAR(MAX),
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id),
+    FOREIGN KEY (attending_provider) REFERENCES Providers(provider_id)
+);
+
+);
+CREATE TABLE Insurance (
+    insurance_id INT IDENTITY(1,1) PRIMARY KEY,
+    patient_id INT,
+    provider_name VARCHAR(150),
+    policy_number VARCHAR(100),
+    group_number VARCHAR(100),
+    coverage_start DATE,
+    coverage_end DATE,
+    FOREIGN KEY (patient_id) REFERENCES Patients(patient_id)
+);
+CREATE TABLE Audit_Log (
+    log_id INT IDENTITY(1,1) PRIMARY KEY,
+    user_name VARCHAR(100),
+    action_type VARCHAR(100),
+    table_name VARCHAR(100),
+    record_id INT,
+    action_timestamp DATETIME DEFAULT GETDATE()
+);
+
+
+
+### CREATING SCHEMA DW ### 
+
+CREATE SCHEMA DW;
+
+CREATE TABLE DW.Dim_Patient (
+    patient_key INT IDENTITY(1,1) PRIMARY KEY,
+    patient_id INT,
+    gender VARCHAR(20),
+    marital_status VARCHAR(50),
+    blood_type VARCHAR(5),
+    city VARCHAR(100),
+    state VARCHAR(100)
+);
+
+CREATE TABLE DW.Dim_Provider (
+    provider_key INT IDENTITY(1,1) PRIMARY KEY,
+    provider_id INT,
+    specialty VARCHAR(150),
+    department_id INT
+);
+
+CREATE TABLE DW.Dim_Date (
+    date_key INT PRIMARY KEY,
+    full_date DATE,
+    year INT,
+    quarter INT,
+    month INT,
+    day INT
+);
+
+CREATE TABLE DW.Dim_Department (
+    department_key INT IDENTITY(1,1) PRIMARY KEY,
+    department_id INT,
+    department_name VARCHAR(100),
+    location VARCHAR(100)
+);
+
+
+CREATE TABLE DW.Fact_Visits (
+    visit_key INT IDENTITY(1,1) PRIMARY KEY,
+    patient_key INT,
+    provider_key INT,
+    department_key INT,
+    date_key INT,
+    visit_type VARCHAR(100),
+    total_amount DECIMAL(10,2),
+    length_of_stay INT,
+
+    FOREIGN KEY (patient_key) REFERENCES DW.Dim_Patient(patient_key),
+    FOREIGN KEY (provider_key) REFERENCES DW.Dim_Provider(provider_key),
+    FOREIGN KEY (department_key) REFERENCES DW.Dim_Department(department_key),
+    FOREIGN KEY (date_key) REFERENCES DW.Dim_Date(date_key)
+);
+
+INSERT INTO DW.Dim_Patient (patient_id, gender, marital_status, blood_type, city, state)
+SELECT patient_id, gender, marital_status, blood_type, city, state
+FROM dbo.Patients;
+
+INSERT INTO DW.Dim_Provider (provider_id, specialty, department_id)
+SELECT provider_id, specialty, department_id
+FROM dbo.Providers;
+
+INSERT INTO DW.Dim_Department (department_id, department_name, location)
+SELECT department_id, department_name, location
+FROM dbo.Departments;
+
+INSERT INTO DW.Dim_Date
+SELECT * FROM dbo.Date;
+
+INSERT INTO DW.Fact_Visits
+(patient_key, provider_key, department_key, date_key, visit_type, total_amount, length_of_stay)
+
+SELECT
+    dp.patient_key,
+    dpr.provider_key,
+    dd.department_key,
+    CONVERT(INT, FORMAT(v.visit_date, 'yyyyMMdd')) AS date_key,
+    v.visit_type,
+    ISNULL(b.total_amount, 0),
+    ISNULL(DATEDIFF(DAY, a.admission_date, a.discharge_date), 0)
+
+FROM dbo.Visits v
+LEFT JOIN dbo.Billing b ON v.visit_id = b.visit_id
+LEFT JOIN dbo.Admissions a ON v.patient_id = a.patient_id
+JOIN DW.Dim_Patient dp ON v.patient_id = dp.patient_id
+JOIN DW.Dim_Provider dpr ON v.provider_id = dpr.provider_id
+JOIN DW.Dim_Department dd ON v.department_id = dd.department_id;
+
+
+#### CREATING VIEW 
+
+/*SQL REPORTING VIEWS*/
+/*Revenue by Department*/
+CREATE VIEW vw_Revenue_By_Department AS
+SELECT d.department_name,
+       SUM(b.total_amount) AS Total_Revenue
+FROM Billing b
+JOIN Visits v ON b.visit_id = v.visit_id
+JOIN Departments d ON v.department_id = d.department_id
+GROUP BY d.department_name;
+
+/*Patient Count by Gender*/
+
+CREATE VIEW vw_Patient_Gender_Distribution AS
+SELECT gender, COUNT(*) AS Patient_Count
+FROM Patients
+GROUP BY gender;
+
+/*Average Length of Stay*/
+CREATE VIEW vw_Avg_Length_of_Stay AS
+SELECT AVG(DATEDIFF(DAY, admission_date, discharge_date)) AS Avg_LOS
+FROM Admissions
+WHERE discharge_date IS NOT NULL;
+
