@@ -1,0 +1,9 @@
+# 🧠 System Architecture
+
+    VS Code (Python ETL)
+            ↓
+    SQL Server (OLTP – EMR Database)
+            ↓
+    DW Schema (Star Schema – OLAP)
+            ↓
+    Power BI / Machine Learning
