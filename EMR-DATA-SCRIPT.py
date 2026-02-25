@@ -1,4 +1,4 @@
-EMR-DATA-SCRIPT
+PYTHON-EMR-DATA-SCRIPT
 
 ======================================================================
 SECTION 11 – GENERATING SYNTHETIC DATA
@@ -593,3 +593,4 @@ cursor.close()
 conn.close()
 
 print("🎉 ALL REMAINING TABLES LOADED SUCCESSFULLY!")
+
